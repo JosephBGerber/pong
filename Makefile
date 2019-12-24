@@ -22,7 +22,7 @@ include $(DEVKITARM)/gba_rules
 #---------------------------------------------------------------------------------
 TARGET		:= $(notdir $(CURDIR))
 BUILD		:= build
-SOURCES		:= source
+SOURCES		:= src
 INCLUDES	:= include
 DATA		:=
 MUSIC		:=
@@ -122,10 +122,10 @@ sprites: sprites.bmp
 	 mv sprites.h source
 	 mv sprites.s source
 
-map: map.bmp
-	 grit map.bmp -gB4 -mRtpf -mf
-	 mv map.h source
-	 mv map.s source
+bg: bg.bmp
+	 grit bg.bmp -gB4 -mRtpf -mf
+	 mv bg.h source
+	 mv bg.s source
 
 #---------------------------------------------------------------------------------
 clean:

@@ -1,15 +1,15 @@
 
-@{{BLOCK(map)
+@{{BLOCK(bg)
 
 @=======================================================================
 @
-@	map, 256x256@4, 
+@	bg, 256x256@4, 
 @	+ palette 256 entries, not compressed
 @	+ 6 tiles (t|f|p reduced) not compressed
 @	+ regular map (flat), not compressed, 32x32 
 @	Total size: 512 + 192 + 2048 = 2752
 @
-@	Time-stamp: 2019-12-19, 00:16:06
+@	Time-stamp: 2019-12-23, 23:16:23
 @	Exported by Cearn's GBA Image Transmogrifier, v0.8.15
 @	( http://www.coranac.com/projects/#grit )
 @
@@ -17,9 +17,9 @@
 
 	.section .rodata
 	.align	2
-	.global mapTiles		@ 192 unsigned chars
-	.hidden mapTiles
-mapTiles:
+	.global bgTiles		@ 192 unsigned chars
+	.hidden bgTiles
+bgTiles:
 	.word 0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000
 	.word 0x01222210,0x01222210,0x01222210,0x01222210,0x01222210,0x01222210,0x01222210,0x01222210
 	.word 0x00000000,0x11111100,0x11111110,0x00001110,0x11100110,0x10110110,0x00110110,0x11110110
@@ -29,9 +29,9 @@ mapTiles:
 
 	.section .rodata
 	.align	2
-	.global mapMap		@ 2048 unsigned chars
-	.hidden mapMap
-mapMap:
+	.global bgMap		@ 2048 unsigned chars
+	.hidden bgMap
+bgMap:
 	.hword 0x0001,0x0002,0x0003,0x0002,0x0003,0x0002,0x0003,0x0002
 	.hword 0x0003,0x0002,0x0003,0x0002,0x0003,0x0002,0x0003,0x0001
 	.hword 0x0001,0x0002,0x0003,0x0002,0x0003,0x0002,0x0003,0x0002
@@ -178,9 +178,9 @@ mapMap:
 
 	.section .rodata
 	.align	2
-	.global mapPal		@ 512 unsigned chars
-	.hidden mapPal
-mapPal:
+	.global bgPal		@ 512 unsigned chars
+	.hidden bgPal
+bgPal:
 	.hword 0x3C76,0x7FFF,0x287C,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
@@ -217,4 +217,4 @@ mapPal:
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 	.hword 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 
-@}}BLOCK(map)
+@}}BLOCK(bg)
