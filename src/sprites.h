@@ -5,10 +5,10 @@
 //
 //	sprites, 64x32@4, 
 //	+ palette 256 entries, not compressed
-//	+ 32 tiles not compressed
+//	+ 32 tiles Metatiled by 2x2 not compressed
 //	Total size: 512 + 1024 = 1536
 //
-//	Time-stamp: 2019-12-23, 22:54:18
+//	Time-stamp: 2019-12-24, 19:26:52
 //	Exported by Cearn's GBA Image Transmogrifier, v0.8.15
 //	( http://www.coranac.com/projects/#grit )
 //

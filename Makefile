@@ -46,7 +46,7 @@ LDFLAGS	=	-g $(ARCH) -Wl,-Map,$(notdir $*.map)
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:= -lmm -lgba
+LIBS	:= -lmm -ltonc
 
 
 #---------------------------------------------------------------------------------
@@ -117,15 +117,15 @@ $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
-sprites: sprites.bmp
+sprites.h sprites.s: sprites.bmp
 	 grit sprites.bmp -gB4 -Mw 2 -Mh 2
-	 mv sprites.h source
-	 mv sprites.s source
+	 mv sprites.h $(SOURCES)
+	 mv sprites.s $(SOURCES)
 
-bg: bg.bmp
+bg.h bg.s: bg.bmp
 	 grit bg.bmp -gB4 -mRtpf -mf
-	 mv bg.h source
-	 mv bg.s source
+	 mv bg.h $(SOURCES)
+	 mv bg.s $(SOURCES)
 
 #---------------------------------------------------------------------------------
 clean:
