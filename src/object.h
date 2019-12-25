@@ -22,18 +22,14 @@ typedef struct Object_S {
     u32 state;
 } Object;
 
-static inline u32 collide (Object* obj1, Object* obj2) {
-    if (obj1->x + obj1->width  > obj2->x) {
+static inline bool collide (Object* obj1, Object* obj2) {
+    if (
+        obj1->x + obj1->width  > obj2->x &&
+        obj1->y + obj1->height > obj2->y &&
+        obj1->x < obj2->x + obj2->width &&
+        obj1->y < obj2->y + obj2->height
+    ) {
         return 1;
-    }
-    if (obj1->y + obj1->height > obj2->y) {
-        return 2;
-    }
-    if (obj1->x < obj2->x + obj2->width) {
-        return 3;
-    }
-    if (obj1->y < obj2->y + obj2->height) {
-        return 4;
     }
     return 0;
 } 
