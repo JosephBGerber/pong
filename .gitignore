@@ -1,3 +1,7 @@
 .vscode
 build
 pong.*
+src/bg.h
+src/bg.s
+src/sprites.h
+src/sprites.s

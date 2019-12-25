@@ -67,7 +67,7 @@ static Object OBJECT_ARRAY[128] = {
         0,
         0
     },
-    // MIDDLE
+    // PLATFORM
     {
         1,
         Platform,
