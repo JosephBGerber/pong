@@ -118,7 +118,7 @@ $(BUILD):
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 sprites.h sprites.s: sprites.bmp
-	 grit sprites.bmp -gB4 -Mw 2 -Mh 2
+	 grit sprites.bmp -gB4 -pS -Mw 2 -Mh 2
 	 mv sprites.h $(SOURCES)
 	 mv sprites.s $(SOURCES)
 

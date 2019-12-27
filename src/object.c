@@ -1,182 +1,200 @@
 #include <tonc.h>
 #include "object.h"
 
-static u32 NUM_OBJECTS = 6;
-static Object OBJECT_ARRAY[128] = {
+static u32 NUM_OBJECTS = 1;
+static Object OBJECT_ARRAY[128] = 
+{
     {
-        1,
 		Player,
 		10,
-		16 << 8,
-		16 << 8,
+		8 << 8,
+		8 << 8,
 		100 << 8,
 		100 << 8,
 		0 << 8,
 		0 << 8,
-		0
-    },
-    // TOP
-    {
-        1,
-        Platform,
-        0,
-        240 << 8,
-        64 << 8,
-        0 << 8,
-        -(64 << 8),
-        0,
-        0,
-        0
-    },
-    // RIGHT
-    {
-        1,
-        Platform,
-        0,
-        64 << 8,
-        160 << 8,
-        240 << 8,
-        0 << 8,
-        0,
-        0,
-        0
-    },
-    // BOTTOM
-    {
-        1,
-        Platform,
-        0,
-        240 << 8,
-        64 << 8,
-        0 << 8,
-        160 << 8,
-        0,
-        0,
-        0
-    },
-    // LEFT
-    {
-        1,
-        Platform,
-        0,
-        64 << 8,
-        160 << 8,
-        -(64 << 8),
-        0 << 8,
-        0,
-        0,
-        0
-    },
-    // PLATFORM
-    {
-        1,
-        Platform,
-        0,
-        48 << 8,
-        8 << 8,
-        96 << 8,
-        112 << 8,
-        0,
-        0,
-        0
-    },
-    
-
+		{0}
+    }
 };
 
+inline static void init_object(Object obj) {
+    for (int i = 0; i < NUM_OBJECTS; i++){
+        if (OBJECT_ARRAY[i].type == Nothing) {
+            OBJECT_ARRAY[i] = obj;
+            return;
+        }
+    }
+
+    NUM_OBJECTS += 1;
+    OBJECT_ARRAY[NUM_OBJECTS - 1] = obj;
+}
+
+inline static void draw_nothing(OBJ_ATTR* attributes) {
+    obj_hide(attributes);
+}
+
 inline static void update_player(Object* player) {
+    PlayerState* state = &player->state.player;
     player->x = player->x + player->dx;
     player->y = player->y + player->dy;
 
-    if (key_is_down(BIT(KI_UP))) {
-        if (player->dy == 0) {
+    if (key_is_down(KEY_UP)) {
+        if (state->jumps > 0) {
+            state->jumps--;
             player->dy = player->dy + int2fx(-5);
         }
     }
 
-    player->dy = player->dy + 50;
+    player->dy = player->dy + float2fx(0.20);
 
-    if (key_is_down(BIT(KI_LEFT))) {
-        player->dx = player->dx - 16;
+    if (key_is_down(KEY_LEFT)) {
+        player->dx = player->dx + float2fx(-0.08);
+        state->hflip = 1;
     }
-    if (key_is_down(BIT(KI_RIGHT))) {
-        player->dx = player->dx + 16;
+    if (key_is_down(KEY_RIGHT)) {
+        player->dx = player->dx + float2fx(0.08);
+        state->hflip = 0;
+    }
+    if (key_is_down(KEY_A) && key_was_up(KEY_A)){
+        init_punch(player->x, player->y, state->hflip);
     }
 }
 
-enum Direction {
-    Top,
-    Right,
-    Left,
-    Bottom,
-};
 
-inline static void collide_player(Object* player, Object* obj, bool direction) {
+
+inline static void collide_player(Object* player, Object* obj) {
+    PlayerState* state = &player->state.player;
+
     if (obj->type == Platform) {                    
-        u32 top = (obj->y + obj->height) - player->y;          
-        u32 right = (obj->x + obj->width) - player->x;
-        u32 bottom = (player->y + player->height) - obj->y;
-        u32 left = (player->x + player->width) - obj->x;
-        
+        Collision collision = collision_direction(player, obj);
 
-        u32 smallest = __INT_MAX__;
-        enum Direction direction;
-
-        if ((top > 0) && (top < smallest)) {
-            smallest = top;
-            direction = Top;
-        }
-        if ((right > 0) && (right < smallest)) {
-            smallest = right;
-            direction = Right;
-        }
-        if ((bottom > 0) && (bottom < smallest)) {
-            smallest = bottom;
-            direction = Bottom;
-        }
-        if ((left > 0) && (left < smallest)) {
-            smallest = left;
-            direction = Left;
-        }
-
-        if (direction == Top) {
+        if (collision.direction == Top) {
             player->dy = 0;
-            player->y = player->y + smallest;
-        } else if (direction == Right) {
+            player->y = player->y + collision.distance;
+
+        } else if (collision.direction == Right) {
             player->dx = 0;
-            player->x = player->x + smallest;
-        } else if (direction == Bottom) {
+            player->x = player->x + collision.distance;
+
+        } else if (collision.direction == Bottom) {
             player->dy = 0;
-            player->y = player->y - smallest;
+            player->y = player->y - collision.distance;
+
+            if (!(key_is_down(KEY_LEFT | KEY_RIGHT))) {
+                // Apply friction to player
+                player->dx = 0;
+            }
+
+            // Reset the jump counter for the player
+            state->jumps = 1;
+
         } else {
             player->dx = 0;
-            player->x = player->x - smallest;
+            player->x = player->x - collision.distance;
         }
     }
 }
 
 inline static void draw_player(OBJ_ATTR* attributes, Object* player) {
+    PlayerState* state = &player->state.player;
     obj_set_attr(
 		attributes,
 		ATTR0_SQUARE,
-		ATTR1_SIZE_16,
-		ATTR2_ID(4) | ATTR2_PALBANK(0)
+		ATTR1_SIZE_8 | (state->hflip << 12),
+		ATTR2_ID(1) | ATTR2_PALBANK(0)
 	);
 
     obj_set_pos(attributes, fx2int(player->x), fx2int(player->y));
 }
 
+void init_punch(FIXED x, FIXED y, u32 hflip) {
+    PunchState punch_state = {
+        30,
+        hflip
+    };
+
+    State state;
+    state.punch = punch_state;
+
+    Object obj = {
+        Punch,
+        0,
+        int2fx(8),
+        int2fx(8),
+        x,
+        y,
+        0,
+        0,
+        state,
+    };
+
+    init_object(obj);
+}
+
+inline static void update_punch(Object* punch) {
+    PunchState* state = &punch->state.punch;
+    
+    if (state->hflip) {
+        punch->x = punch->x - int2fx(2);
+    } else {
+        punch->x = punch->x + int2fx(2);
+    }
+    
+    state->timer--;
+
+    if (state->timer == 0) {
+        punch->type = Nothing;
+    }
+}
+
+inline static void collide_punch(Object* platform, Object* obj) {}
+
+inline static void draw_punch(OBJ_ATTR* attributes, Object* punch) {
+    PunchState* state = &punch->state.punch;
+    obj_set_attr(
+		attributes,
+		ATTR0_SQUARE,
+		ATTR1_SIZE_8 | (state->hflip << 12),
+		ATTR2_ID(2) | ATTR2_PALBANK(0)
+	);
+
+    obj_set_pos(attributes, fx2int(punch->x), fx2int(punch->y));
+}
+
+void init_platform(FIXED width, FIXED height, FIXED x, FIXED y) {
+    Object obj = {
+        Platform,
+        0,
+        width,
+        height,
+        x,
+        y,
+        0,
+        0,
+        {0}
+    };
+
+    init_object(obj);
+}
+
+
+
 inline static void update_platform(Object* player) {}
 
-inline static void collide_platform(Object* platform, Object* obj, bool direction) {}
+inline static void collide_platform(Object* platform, Object* obj) {}
 
 inline static void draw_platform(OBJ_ATTR* attributes, Object* platform) {}
 
 void draw_objects() {
     for (int i = 0; i < NUM_OBJECTS; i++) {
         switch (OBJECT_ARRAY[i].type) {
+            case Nothing:
+                break;
             case Player:
                 update_player(&OBJECT_ARRAY[i]);
+                break;
+            case Punch:
+                update_punch(&OBJECT_ARRAY[i]);
                 break;
             case Platform:
                 update_platform(&OBJECT_ARRAY[i]);
@@ -186,17 +204,22 @@ void draw_objects() {
 
     for (int i = 0; i < NUM_OBJECTS; i++) {
         for (int u = 0; u < NUM_OBJECTS; u++) {
-            if ((!OBJECT_ARRAY[u].enabled) | (i == u)) continue;
+            if ((OBJECT_ARRAY[u].type == Nothing) | (i == u)) continue;
 
             bool direction = collide(&OBJECT_ARRAY[i], &OBJECT_ARRAY[u]);
 
             if (direction) {
                 switch(OBJECT_ARRAY[i].type) {
+                    case Nothing:
+                        break;
                     case Player:
-                        collide_player(&OBJECT_ARRAY[i], &OBJECT_ARRAY[u], direction);
+                        collide_player(&OBJECT_ARRAY[i], &OBJECT_ARRAY[u]);
+                        break;
+                    case Punch:
+                        collide_punch(&OBJECT_ARRAY[i], &OBJECT_ARRAY[u]);
                         break;
                     case Platform:
-                        collide_platform(&OBJECT_ARRAY[i], &OBJECT_ARRAY[u], direction);
+                        collide_platform(&OBJECT_ARRAY[i], &OBJECT_ARRAY[u]);
                         break;
                 }
             }
@@ -205,8 +228,14 @@ void draw_objects() {
 
     for (int i = 0; i < NUM_OBJECTS; i++) {
         switch (OBJECT_ARRAY[i].type) {
+            case Nothing:
+                draw_nothing(&oam_mem[i]);
+                break;
             case Player:
                 draw_player(&oam_mem[i], &OBJECT_ARRAY[i]);
+                break;
+            case Punch:
+                draw_punch(&oam_mem[i], &OBJECT_ARRAY[i]);
                 break;
             case Platform:
                 draw_platform(&oam_mem[i], &OBJECT_ARRAY[i]);

@@ -20,6 +20,17 @@ int main(void) {
 	memcpy((void*)MEM_PAL_OBJ, spritesPal, spritesPalLen);
 	memcpy(tile_mem_obj, spritesTiles, spritesTilesLen);
 
+	// TOP
+	init_platform(240 << 8, 64 << 8, 0 << 8, -(64 << 8));
+	// RIGHT
+	init_platform(64 << 8, 160 << 8, 240 << 8, 0 << 8);
+	// BOTTOM
+	init_platform(240 << 8, 64 << 8, 0 << 8, 160 << 8);
+	// LEFT
+	init_platform(64 << 8, 160 << 8, -(64 << 8), 0 << 8);
+	// PLATFORM
+	init_platform(48 << 8, 8 << 8, 96 << 8, 112 << 8);
+
     while(1) {
 		vid_vsync();
 		key_poll();
