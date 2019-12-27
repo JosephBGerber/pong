@@ -8,10 +8,11 @@ typedef enum Type_E {
     Player,
     Punch,
     Platform,
+    Ball,
 } Type;
 
 typedef struct PlayerState_U {
-    u32 jumps:1;
+    u32 jump:8;
     u32 hflip:1;
 } PlayerState;
 
@@ -39,7 +40,7 @@ typedef struct Object_S {
     State state;
 } Object;
 
-static inline bool collide (Object* obj1, Object* obj2) {
+static inline bool collide(Object* obj1, Object* obj2) {
     if (
         obj1->x + obj1->width  > obj2->x &&
         obj1->y + obj1->height > obj2->y &&
@@ -91,6 +92,7 @@ static inline Collision collision_direction(Object* obj1, Object* obj2) {
     return collision;
 }
  
+void init_ball(FIXED x, FIXED y);
 void init_punch(FIXED x, FIXED y, u32 hflip);
 void init_platform(FIXED width, FIXED height, FIXED x, FIXED y);
 void draw_objects();

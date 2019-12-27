@@ -33,34 +33,42 @@ inline static void draw_nothing(OBJ_ATTR* attributes) {
     obj_hide(attributes);
 }
 
+
+
 inline static void update_player(Object* player) {
     PlayerState* state = &player->state.player;
     player->x = player->x + player->dx;
     player->y = player->y + player->dy;
 
-    if (key_is_down(KEY_UP)) {
-        if (state->jumps > 0) {
-            state->jumps--;
-            player->dy = player->dy + int2fx(-5);
+    if (key_is_down(KEY_A)) {
+        if (state->jump == 12) {
+            player->dy = int2fx(-2);
+        }
+
+        if (state->jump > 0) {
+            state->jump--;
+            player->dy = player->dy - float2fx(0.3);
         }
     }
 
-    player->dy = player->dy + float2fx(0.20);
+    if (key_is_up(KEY_A) && key_was_down(KEY_A)) {
+        state->jump = 0;
+    }
+
+    player->dy = player->dy + float2fx(0.2);
 
     if (key_is_down(KEY_LEFT)) {
-        player->dx = player->dx + float2fx(-0.08);
+        player->dx = player->dx - float2fx(0.08);
         state->hflip = 1;
     }
     if (key_is_down(KEY_RIGHT)) {
         player->dx = player->dx + float2fx(0.08);
         state->hflip = 0;
     }
-    if (key_is_down(KEY_A) && key_was_up(KEY_A)){
+    if (key_is_down(KEY_B) && key_was_up(KEY_B)){
         init_punch(player->x, player->y, state->hflip);
     }
 }
-
-
 
 inline static void collide_player(Object* player, Object* obj) {
     PlayerState* state = &player->state.player;
@@ -82,11 +90,11 @@ inline static void collide_player(Object* player, Object* obj) {
 
             if (!(key_is_down(KEY_LEFT | KEY_RIGHT))) {
                 // Apply friction to player
-                player->dx = 0;
+                player->dx = fxmul(player->dx, float2fx(0.70));
             }
 
-            // Reset the jump counter for the player
-            state->jumps = 1;
+            // Reset the jump value for the player
+            state->jump = 12;
 
         } else {
             player->dx = 0;
@@ -107,6 +115,8 @@ inline static void draw_player(OBJ_ATTR* attributes, Object* player) {
     obj_set_pos(attributes, fx2int(player->x), fx2int(player->y));
 }
 
+
+
 void init_punch(FIXED x, FIXED y, u32 hflip) {
     PunchState punch_state = {
         30,
@@ -116,6 +126,13 @@ void init_punch(FIXED x, FIXED y, u32 hflip) {
     State state;
     state.punch = punch_state;
 
+    FIXED dx;
+    if (hflip) {
+        dx = int2fx(-2);
+    } else {
+        dx = int2fx(2);
+    }
+
     Object obj = {
         Punch,
         0,
@@ -123,7 +140,7 @@ void init_punch(FIXED x, FIXED y, u32 hflip) {
         int2fx(8),
         x,
         y,
-        0,
+        dx,
         0,
         state,
     };
@@ -133,12 +150,8 @@ void init_punch(FIXED x, FIXED y, u32 hflip) {
 
 inline static void update_punch(Object* punch) {
     PunchState* state = &punch->state.punch;
-    
-    if (state->hflip) {
-        punch->x = punch->x - int2fx(2);
-    } else {
-        punch->x = punch->x + int2fx(2);
-    }
+
+    punch->x = punch->x + punch->dx;
     
     state->timer--;
 
@@ -161,6 +174,72 @@ inline static void draw_punch(OBJ_ATTR* attributes, Object* punch) {
     obj_set_pos(attributes, fx2int(punch->x), fx2int(punch->y));
 }
 
+
+
+void init_ball(FIXED x, FIXED y) {
+    Object obj = {
+        Ball,
+        0,
+        int2fx(16),
+        int2fx(16),
+        x,
+        y,
+        0,
+        0,
+        {0},
+    };
+
+    init_object(obj);
+}
+
+static inline void update_ball(Object* ball) {
+    ball->x = ball->x + ball->dx;
+    ball->y = ball->y + ball->dy;
+
+    ball->dy = ball->dy + float2fx(0.2);
+}
+
+static inline void collide_ball(Object* ball, Object* obj) {
+    
+    if (obj->type == Platform) {
+        Collision collision = collision_direction(ball, obj);
+
+        if (collision.direction == Top) {
+            ball->y = ball->y + collision.distance;
+        } else if (collision.direction == Right) {
+            ball->x = ball->x + collision.distance;
+        } else if (collision.direction == Bottom) {
+            ball->y = ball->y - collision.distance;
+        } else {
+            ball->x = ball->x - collision.distance;
+        }
+
+        if ((collision.direction == Top) | (collision.direction == Bottom)) {
+            ball->dy = fxmul(-ball->dy, float2fx(0.95));
+        } else {
+            ball->dx = fxmul(-ball->dx, float2fx(0.95));
+        }
+    }
+
+    if (obj->type == Punch) {
+        ball->dx = ball->dx + obj->dx;
+        ball->dy = ball->dy + obj->dy;
+    }
+}
+
+static inline void draw_ball(OBJ_ATTR* attributes, Object* ball) {
+    obj_set_attr(
+		attributes,
+		ATTR0_SQUARE,
+		ATTR1_SIZE_16,
+		ATTR2_ID(4) | ATTR2_PALBANK(0)
+	);
+
+    obj_set_pos(attributes, fx2int(ball->x), fx2int(ball->y));
+}
+
+
+
 void init_platform(FIXED width, FIXED height, FIXED x, FIXED y) {
     Object obj = {
         Platform,
@@ -177,13 +256,13 @@ void init_platform(FIXED width, FIXED height, FIXED x, FIXED y) {
     init_object(obj);
 }
 
-
-
 inline static void update_platform(Object* player) {}
 
 inline static void collide_platform(Object* platform, Object* obj) {}
 
 inline static void draw_platform(OBJ_ATTR* attributes, Object* platform) {}
+
+
 
 void draw_objects() {
     for (int i = 0; i < NUM_OBJECTS; i++) {
@@ -198,6 +277,9 @@ void draw_objects() {
                 break;
             case Platform:
                 update_platform(&OBJECT_ARRAY[i]);
+                break;
+            case Ball:
+                update_ball(&OBJECT_ARRAY[i]);
                 break;
         }
     }
@@ -221,6 +303,9 @@ void draw_objects() {
                     case Platform:
                         collide_platform(&OBJECT_ARRAY[i], &OBJECT_ARRAY[u]);
                         break;
+                    case Ball:
+                        collide_ball(&OBJECT_ARRAY[i], &OBJECT_ARRAY[u]);
+                        break;
                 }
             }
         }
@@ -240,6 +325,8 @@ void draw_objects() {
             case Platform:
                 draw_platform(&oam_mem[i], &OBJECT_ARRAY[i]);
                 break;
+            case Ball:
+                draw_ball(&oam_mem[i], &OBJECT_ARRAY[i]);
         }
     }
 }

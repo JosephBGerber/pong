@@ -31,6 +31,8 @@ int main(void) {
 	// PLATFORM
 	init_platform(48 << 8, 8 << 8, 96 << 8, 112 << 8);
 
+	init_ball(70 << 8, 130 << 8);
+
     while(1) {
 		vid_vsync();
 		key_poll();
